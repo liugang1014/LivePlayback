@@ -30,6 +30,7 @@ import android.view.View;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
+import com.danikula.videocache.HttpProxyCacheServer;
 import com.hejunlin.liveplayback.ijkplayer.media.IjkVideoView;
 
 import java.text.SimpleDateFormat;
@@ -65,6 +66,9 @@ public class LiveActivity extends Activity {
         mTextClock = (TextView)findViewById(R.id.tv_time);
         mTextClock.setText(getDateFormate());
         mLoadingText.setText("节目加载中...");
+
+       // new ChannelsParser().setRootUrl("http://m.iptv203.com/?tid=hbitv").process();
+        //new CachePrepareManager().setVideoUrl(mVideoUrl).process();
         initVideo();
     }
 
@@ -79,6 +83,10 @@ public class LiveActivity extends Activity {
         // init player
         IjkMediaPlayer.loadLibrariesOnce(null);
         IjkMediaPlayer.native_profileBegin("libijkplayer.so");
+
+
+        //HttpProxyCacheServer proxy = MyApp.getProxy(this);
+        //mVideoUrl = proxy.getProxyUrl(mVideoUrl);
         mVideoView.setVideoURI(Uri.parse(mVideoUrl));
         mVideoView.setOnPreparedListener(new IMediaPlayer.OnPreparedListener() {
             @Override
