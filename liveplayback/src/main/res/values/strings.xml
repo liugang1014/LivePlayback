@@ -1,3 +1,9 @@
 <resources>
-    <string name="app_name">LivePlayback</string>
+    <string name="app_name">刚刚HDTV</string>
+    <string name="VideoView_error_text_invalid_progressive_playback">ok</string>
+    <string name="VideoView_error_text_unknown">unknown</string>
+    <string name="VideoView_error_button">error</string>
+
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
 </resources>

@@ -25,6 +25,8 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
+import java.util.ArrayList;
+
 /**
  * Created by hejunlin on 2015/10/28.
  * blog: http://blog.csdn.net/hejjunlin
@@ -32,21 +34,27 @@ import android.widget.TextView;
 public class OptionItemAdapter extends RecyclerView.Adapter<OptionItemAdapter.ViewHolder> {
 
     // 数据集
-    private String[] mDataList = new String[] {
-            "湖南卫视HD","湖南卫视FHD","Test Qiniu FHD"
-    };
+//    private String[] mDataList = new String[] {
+//            "湖南卫视HD","湖南卫视FHD","Test Qiniu FHD"
+//    };
+//
+//    private String [] mUrlList = new String[]{
+//            "http://api.iptv888.com/play.m3u8?token=urREjHmdRXicrT%2B6r%2F0WfQwG&tid=hbitv&id=15",
+//            "http://223.110.241.203:6610/gitv/live1/G_HUNAN-CQ/G_HUNNA-CQ/1.m3u8?IASHttpSessionId=OTT2054620190412053529016349",
+//            "http://poyelz9e8.bkt.clouddn.com/c001_1555049601_1555049611.ts"
+//    };
 
-    private String [] mUrlList = new String[]{
-            "http://huaweicdn.hb.chinamobile.com/PLTV/2510088/224/3221225924/1.m3u8",
-            "http://223.110.241.203:6610/gitv/live1/G_HUNAN-CQ/G_HUNNA-CQ/1.m3u8?IASHttpSessionId=OTT2054620190412053529016349",
-            "http://poyelz9e8.bkt.clouddn.com/c001_1555049601_1555049611.ts"
-    };
-
+    private ArrayList<ChannelVO> voArrayList;
     private Context mContext;
     private int id;
     private View.OnFocusChangeListener mOnFocusChangeListener;
     private OnBindListener onBindListener;
     private static final String TAG = OptionItemAdapter.class.getSimpleName();
+
+    private View.OnClickListener onClickListener;
+    public void setOnItemClickListener(View.OnClickListener onClickListener) {
+        this.onClickListener=onClickListener;
+    }
 
     public interface OnBindListener {
         void onBind(View view, int i);
@@ -63,11 +71,12 @@ public class OptionItemAdapter extends RecyclerView.Adapter<OptionItemAdapter.Vi
         this.id = id;
     }
 
-    public OptionItemAdapter(Context context, int id, View.OnFocusChangeListener onFocusChangeListener) {
+    public OptionItemAdapter(Context context, int id, ArrayList data) {
         super();
         mContext = context;
         this.id = id;
-        this.mOnFocusChangeListener = onFocusChangeListener;
+        this.voArrayList=data;
+        //this.mOnFocusChangeListener = onFocusChangeListener;
     }
 
     public void setOnBindListener(OnBindListener onBindListener) {
@@ -88,19 +97,14 @@ public class OptionItemAdapter extends RecyclerView.Adapter<OptionItemAdapter.Vi
 
     @Override
     public void onBindViewHolder(ViewHolder viewHolder, final int i) {
-        if (mDataList.length == 0) {
+        if ( voArrayList==null) {
             Log.d(TAG, "mDataset has no data!");
             return;
         }
-        viewHolder.mTextView.setText(mDataList[i]);
+        viewHolder.mTextView.setText(voArrayList.get(i).name);
         viewHolder.itemView.setTag(i);
         viewHolder.itemView.setOnFocusChangeListener(mOnFocusChangeListener);
-        viewHolder.itemView.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                LiveActivity.activityStart(mContext, mUrlList[i]);
-            }
-        });
+        viewHolder.itemView.setOnClickListener(this.onClickListener);
         if (onBindListener != null) {
             onBindListener.onBind(viewHolder.itemView, i);
         }
@@ -108,7 +112,7 @@ public class OptionItemAdapter extends RecyclerView.Adapter<OptionItemAdapter.Vi
 
     @Override
     public int getItemCount() {
-        return mDataList.length;
+        return voArrayList.size();
     }
 
     public class ViewHolder extends RecyclerView.ViewHolder {

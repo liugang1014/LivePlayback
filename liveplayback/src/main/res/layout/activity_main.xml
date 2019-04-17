@@ -4,7 +4,6 @@
     android:layout_height="match_parent"
     android:gravity="center"
     android:clipChildren="false"
-    android:background="@drawable/main_bg"
     android:orientation="vertical">
 
     <android.support.v7.widget.RecyclerView

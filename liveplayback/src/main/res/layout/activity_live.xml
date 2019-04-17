@@ -11,19 +11,25 @@
         android:layout_height="match_parent"
         android:background="@color/colorBlack">
 
-        <com.hejunlin.liveplayback.ijkplayer.media.IjkVideoView
+        <media.IjkVideoView
             android:id="@+id/videoview"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:layout_centerInParent="true"
             android:background="@color/colorBlack">
-        </com.hejunlin.liveplayback.ijkplayer.media.IjkVideoView>
+        </media.IjkVideoView>
+
+        <RelativeLayout
+            android:layout_width="300dp"
+            android:layout_height="match_parent"
+            android:id="@+id/channelListContainer"></RelativeLayout>
 
         <RelativeLayout
             android:id="@+id/rl_loading"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:background="#de262a3b">
+            android:layout_centerInParent="true"
+            android:layout_width="120dp"
+            android:layout_height="120dp"
+            android:background="#00262a3b">
 
             <TextView
                 android:id="@+id/tv_load_msg"
@@ -47,6 +53,7 @@
         </RelativeLayout>
         
         <LinearLayout
+            android:visibility="gone"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:background="@color/player_panel_background_color">

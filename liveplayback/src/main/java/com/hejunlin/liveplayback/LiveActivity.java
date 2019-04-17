@@ -18,32 +18,28 @@
 
 package com.hejunlin.liveplayback;
 
-import android.app.Activity;
 import android.app.AlertDialog;
-import android.content.Context;
 import android.content.DialogInterface;
-import android.content.Intent;
-import android.content.res.Configuration;
 import android.net.Uri;
 import android.os.Bundle;
+import android.support.v4.app.FragmentActivity;
+import android.support.v4.app.FragmentManager;
+import android.view.MotionEvent;
 import android.view.View;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
-import com.danikula.videocache.HttpProxyCacheServer;
-import com.hejunlin.liveplayback.ijkplayer.media.IjkVideoView;
+import org.greenrobot.eventbus.EventBus;
 
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Calendar;
 
+import media.IjkVideoView;
 import tv.danmaku.ijk.media.player.IMediaPlayer;
 import tv.danmaku.ijk.media.player.IjkMediaPlayer;
 
-/**
- * Created by hejunlin on 2016/10/28.
- * blog: http://blog.csdn.net/hejjunlin
- */
-public class LiveActivity extends Activity {
+public class LiveActivity extends FragmentActivity {
 
     private IjkVideoView mVideoView;
     private RelativeLayout mVideoViewLayout;
@@ -53,6 +49,8 @@ public class LiveActivity extends Activity {
     private String mVideoUrl = "";
     private int mRetryTimes = 0;
     private static final int CONNECTION_TIMES = 5;
+    private ChannelListFragment channelListFragment;
+    private ChannelsParser channelsParser;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -67,9 +65,42 @@ public class LiveActivity extends Activity {
         mTextClock.setText(getDateFormate());
         mLoadingText.setText("节目加载中...");
 
-       // new ChannelsParser().setRootUrl("http://m.iptv203.com/?tid=hbitv").process();
-        //new CachePrepareManager().setVideoUrl(mVideoUrl).process();
         initVideo();
+
+
+        final FragmentManager fragmentManager=LiveActivity.this.getSupportFragmentManager();
+          channelListFragment=new ChannelListFragment();
+        fragmentManager.beginTransaction().replace(R.id.channelListContainer,channelListFragment).hide(channelListFragment).commitAllowingStateLoss();
+
+        channelsParser=new ChannelsParser().setRootUrl("http://m.iptv203.com/?tid=hbitv").process(new AsyncCallback<ArrayList>() {
+            @Override
+            public void onFinished(final ArrayList data) {
+                LiveActivity.this.runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        channelListFragment.setData(data);
+                        mLoadingLayout.setVisibility(View.GONE);
+                        fragmentManager.beginTransaction().show(channelListFragment).commitAllowingStateLoss();
+
+                    }
+                });
+            }
+
+            @Override
+            public void onError() {
+
+            }
+        });
+
+        mVideoView.setOnTouchListener(new View.OnTouchListener() {
+            @Override
+            public boolean onTouch(View v, MotionEvent event) {
+                FragmentManager fragmentManager=LiveActivity.this.getSupportFragmentManager();
+                fragmentManager.beginTransaction().show(channelListFragment).commitAllowingStateLoss();
+                return true;
+            }
+        });
+        //new CachePrepareManager().setVideoUrl(mVideoUrl).process();
     }
 
     private String getDateFormate(){
@@ -83,11 +114,65 @@ public class LiveActivity extends Activity {
         // init player
         IjkMediaPlayer.loadLibrariesOnce(null);
         IjkMediaPlayer.native_profileBegin("libijkplayer.so");
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+        if (!mVideoView.isBackgroundPlayEnabled()) {
+            mVideoView.stopPlayback();
+            mVideoView.release(true);
+            mVideoView.stopBackgroundPlay();
+        }
+        IjkMediaPlayer.native_profileEnd();
+    }
 
 
+
+    public void play(ChannelVO channelVO) {
+        FragmentManager fragmentManager=LiveActivity.this.getSupportFragmentManager();
+        fragmentManager.beginTransaction().hide(channelListFragment).commitAllowingStateLoss();
+
+        channelsParser.url(channelVO.url, new AsyncCallback<String>() {
+            @Override
+            public void onFinished(final String data) {
+                LiveActivity.this.runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        playUrl(data);
+                    }
+                });
+            }
+
+            @Override
+            public void onError() {
+
+            }
+        });
+
+    }
+
+    private void playUrl(String data) {
         //HttpProxyCacheServer proxy = MyApp.getProxy(this);
         //mVideoUrl = proxy.getProxyUrl(mVideoUrl);
-        mVideoView.setVideoURI(Uri.parse(mVideoUrl));
+
+        //onStop();
+
+//        initVideo();
+
+        mVideoView.setVideoURI(Uri.parse(data));
+        mLoadingLayout.setVisibility(View.VISIBLE);
+
         mVideoView.setOnPreparedListener(new IMediaPlayer.OnPreparedListener() {
             @Override
             public void onPrepared(IMediaPlayer mp) {
@@ -127,7 +212,7 @@ public class LiveActivity extends Activity {
                 if (mRetryTimes > CONNECTION_TIMES) {
                     new AlertDialog.Builder(LiveActivity.this)
                             .setMessage("节目暂时不能播放")
-                            .setPositiveButton(R.string.VideoView_error_button,
+                            .setPositiveButton("确定",
                                     new DialogInterface.OnClickListener() {
                                         public void onClick(DialogInterface dialog, int whichButton) {
                                             LiveActivity.this.finish();
@@ -143,39 +228,5 @@ public class LiveActivity extends Activity {
                 return false;
             }
         });
-
     }
-
-    @Override
-    protected void onResume() {
-        super.onResume();
-    }
-
-    @Override
-    protected void onPause() {
-        super.onPause();
-    }
-
-    @Override
-    protected void onStop() {
-        super.onStop();
-        if (!mVideoView.isBackgroundPlayEnabled()) {
-            mVideoView.stopPlayback();
-            mVideoView.release(true);
-            mVideoView.stopBackgroundPlay();
-        }
-        IjkMediaPlayer.native_profileEnd();
-    }
-
-    public static void activityStart(Context context, String url) {
-        Intent intent = new Intent(context, LiveActivity.class);
-        intent.putExtra("url", url);
-        context.startActivity(intent);
-    }
-
-    @Override
-    public void onConfigurationChanged(Configuration newConfig) {
-        super.onConfigurationChanged(newConfig);
-    }
-
 }
